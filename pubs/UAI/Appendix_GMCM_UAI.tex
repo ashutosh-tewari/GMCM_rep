@@ -1,0 +1,258 @@
+\documentclass[]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+
+%opening
+\title{Appendix: An Expectation Maximization Algorithm for Gaussian Mixture Copula Models}
+
+
+
+\begin{document}
+
+\maketitle
+
+\DeclareRobustCommand{\erf}{\textmd{erf}}
+
+\DeclareRobustCommand{\llDenom}[1] {\prod\limits_{r=1}^{d}\psi_{r}\left(z_r({#1});\beta_r \right) }
+
+\DeclareRobustCommand{\invCDF}[1]{ \textbf{z}({#1}) }
+
+\DeclareRobustCommand{\der}[2] {\frac{d \left({#2}\right)}{d{#1}}}
+
+\DeclareRobustCommand{\zbar}[1] {\bar{\textbf{z}}({#1})}
+
+\appendix
+
+\section{Matrix Calculus}\label{sec:matrix_calculus}
+We provide identities and rules from matrix calculus necessary to carry out the derivations included in the paper. We use the following convention.
+
+\begin{align*}
+& \der{\mathbb{R}^{1\times 1}}{\mathbb{R}^{n\times 1}} = \mathbb{R}^{1\times n}, \qquad \der{\mathbb{R}^{n\times 1}}{\mathbb{R}^{1\times 1}} = \mathbb{R}^{n\times 1}, \qquad \der{\mathbb{R}^{n\times m}}{\mathbb{R}^{1\times 1}} = \mathbb{R}^{nm\times 1} \\ \\
+&  \der{\mathbb{R}^{n\times 1}}{\mathbb{R}^{n\times 1}} = \mathbb{R}^{n\times n}, \qquad\der{\mathbb{R}^{n\times m}}{\mathbb{R}^{n\times 1}} = \mathbb{R}^{nm\times n}, \qquad \der{\mathbb{R}^{n\times m}}{\mathbb{R}^{n\times m}} = \mathbb{R}^{nm\times nm} 
+\end{align*}
+
+\subsection{Chain Rule}
+Given that  \textbf{x}, \textbf{y}, \textbf{z} and  \textbf{w} are vectors and that \textbf{w} is a function of \textbf{z}, \textbf{z} is a function of \textbf{y}, which in turn is a function of \textbf{x}, the following holds,
+
+\begin{equation}\label{eq:chain_rule}
+\der{\textbf{x}}{\textbf{w}} =\der{\textbf{x}}{\textbf{y}} \times \der{\textbf{y}}{\textbf{z}} \times \der{\textbf{z}}{\textbf{w}}
+\end{equation}
+
+\subsection{Triple product rule}
+Given three dependent vectors \textbf{x}, \textbf{y}, \textbf{z}, the following holds,
+\begin{equation}\label{triple_prod_rule}
+\left( \frac{d\textbf{x}}{d\textbf{y}}\right)_\textbf{z} \left( \frac{d\textbf{y}}{d\textbf{z}}\right)_\textbf{x} \left( \frac{d\textbf{z}}{d\textbf{x}}\right)_\textbf{y} = -1
+\end{equation}
+Where the subscript identifies the entity that is held constant.
+
+\subsection{Matrix Calculus Identities}
+Let $A$ be a $d\times d$ invertible matrix, $\textbf{x}$ a $d\times 1$ vector, $I_d$ a $d$ dimensional identity matrix and $T_{m,n}$ a $m\times n$ permutation matrix. Also, $\otimes$ denotes the Kronecker product and $\text{vec}(\cdot )$ denote the vectorization operator.
+
+\begin{align}
+&\frac{d\textbf{x}^T\textbf{x}}{d\textbf{x}} = 2\textbf{x} \label{id:x'x_x} \\
+&\frac{dA^{-1}}{dA} = -\left( A^{-1} \otimes A^{-T}\right) \label{id:invA_A} \\
+&\frac{dA\textbf{x}}{dA} = \textbf{x}\otimes I_d \label{id:Ax_A} \\
+&\frac{dA\textbf{x}}{d\textbf{x}} = A^T \label{id:Ax_x} \\
+&\frac{dA^TA}{dA} = (I_d \otimes A)\times (I_{d^2}+T_{d,d}) \label{id:A'A_A} \\
+&\frac{dA f(A)}{dA} = (f(A)\otimes I_d)+\frac{df(A)}{dA}\times A^T \label{Af(A),A} \\
+&\frac{\log(|A|)}{A} = \textmd{vec}(A^{-T}) \label{id:log|A|_A}
+\end{align}
+\\ \\
+\section{Gradient of $Q(\Theta,\hat{\Theta})$}\label{sec:derivation_of_gradient}
+
+\begin{align}\label{eq:GEM_objective_QI_QII}
+Q(\Theta,\hat{\Theta}) & = Q_I - Q_{II}
+\end{align}
+where,
+\begin{align*}\label{eq:QI_and_Q2}
+Q_I& = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m  \left( \log (\alpha_{y(i)}) + \log(|W_{y(i)}|)\right) g(i)_{y(i)}  -\sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m  \left(\frac{[W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}]}{2}\right) g(i)_{y(i)}   \\
+ Q_{II}& = \sum\limits_{i=1}^n \sum\limits_{r=1}^{d} \log \left(\sum\limits_{l=1}^{m} \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \right)
+\end{align*}
+
+We derive the gradients of $Q_I$ and $Q_{II}$ separately.
+\\ 
+\subsection{Gradient of $Q_I$}
+\subsubsection*{Partial derivatives of $Q_I$ w.r.t $\alpha_k$}
+
+\begin{align*}
+\der{\alpha_k}{Q_I} = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \frac{1}{\alpha_{y(i)}}\der{\alpha_k}{\alpha_{y(i)}} g(i)_{y(i)} \right) - \frac{1}{2} \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{\alpha_k}{ [W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}] }\right) g(i)_{y(i)}
+\end{align*}
+using the chain rule of matrix calculus given in equation \ref{eq:chain_rule}.
+\begin{align*}
+\der{\alpha_k}{Q_I} &= \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \frac{1}{\alpha_{y(i)}}\der{\alpha_k}{\alpha_{y(i)}} -  \frac{1}{2} \der{\alpha_k}{\zbar{i}} \times \der{\zbar{i}}{W_{y(i)}\zbar{i}} \times \der{W_{y(i)}\zbar{i}} { [W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}] }\right) g(i)_{y(i)}
+\end{align*}
+using the identities \ref{id:Ax_x} and \ref{id:x'x_x}.
+\begin{align*}
+&\der{\alpha_k}{Q_I} = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \frac{1}{\alpha_{y(i)}}\der{\alpha_k}{\alpha_{y(i)}} -  \frac{1}{2} \der{\alpha_k}{\zbar{i}} \times W^T_{y(i)} \times 2W_{y(i)}\zbar{i}\right) g(i)_{y(i)}
+\end{align*}
+using the fact that $\der{\alpha_k}{\alpha_{y(i)}}=1$, when $y(i)=k$ and zero everywhere else, we have
+\begin{align*}
+\der{\alpha_k}{Q_I} &= \frac{1}{\alpha_k}\sum\limits_{i=1}^n  g(i)_k - \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left(\der{\alpha_k}{\zbar{i}} W^T_{y(i)}  W_{y(i)}\zbar{i}\right) g(i)_{y(i)}
+\end{align*}
+moving the summation inside as $\der{\alpha_k}{\textbf{z}(i)}$ is independent of $y(i)$
+\begin{align*}
+\der{\alpha_k}{Q_I} &= \frac{1}{\alpha_k}\sum\limits_{i=1}^n g(i)_k - \sum\limits_{i=1}^n \der{\alpha_k}{\textbf{z}(i)} \left(\sum\limits_{y(i)=1}^m  W^T_{y(i)}  W_{y(i)} \zbar{i} g(i)_{y(i)}\right) 
+\end{align*}
+\\
+\subsubsection*{Partial derivative of $Q_I$ w.r.t $\mu_k$}
+
+\begin{align*}
+&\der{\mu_k}{Q_I}  = -\frac{1}{2}\sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{\mu_k}{ [W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}] }\right)g(i)_{y(i)} \\
+&\text{using the chain-rule given in equation \ref{eq:chain_rule},}  \\
+&\der{\mu_k}{Q_I} = -\frac{1}{2}\sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{\mu_k}{\zbar{i}} \times \der{\zbar{i}}{W_{y(i)}\zbar{i}} \times \der{W_{y(i)}\zbar{i}} { [W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}] } \right) g(i)_{y(i)} \\
+&\text{using the identities \ref{id:Ax_x} and \ref{id:x'x_x},} \\
+&\der{\mu_k}{Q_I} = -\sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left(\der{\mu_k}{\zbar{i}} W^T_{y(i)}W_{y(i)}\zbar{i}\right) g(i)_{y(i)} \\ \\
+&\text{expanding } \zbar{i} \text{ as } \zbar{i}=\textbf{z}(i)-\mu_{y(i)}, \\
+&\der{\mu_k}{Q_I} = -\sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left(\der{\mu_k}{\textbf{z}(i)-\mu_{y(i)}} W^T_{y(i)}W_{y(i)}\zbar{i}\right) g(i)_{y(i)}
+\end{align*}
+
+\begin{align*}
+&\der{\mu_k}{Q_I} = -\sum\limits_{i=1}^n \der{\mu_k}{\textbf{z}(i)} \sum\limits_{y(i)=1}^m \left(W^T_{y(i)}W_{y(i)}\zbar{i} g(i)_{y(i)} \right)  \\
+& \qquad \qquad \qquad + \sum\limits_{i=1}^N \sum\limits_{y(i)=1}^M \left(\der{\mu_k}{\mu_{y(i)}} W^T_{y(i)}W_{y(i)}\zbar{i}\right) g(i)_{y(i)} \\ \\
+&\text{using the fact that } \der{\mu_k}{\mu_{y(i)}}=I_d \text{ when } y(i)=k \text{ and zero everywhere else,} \\
+&\der{\mu_k}{Q_I} = -\sum\limits_{i=1}^n \der{\mu_k}{\textbf{z}(i)} \sum\limits_{y(i)=1}^m \left(W^T_{y(i)}W_{y(i)}\zbar{i} g(i)_{y(i)} \right) + W^T_k W_k\sum\limits_{i=1}^n  \left(\zbar{i} g(i)_k\right)
+\end{align*}
+\\
+\subsubsection*{Partial derivative of $Q_I$ w.r.t $W_k$}
+
+\begin{align*}
+& \der{W_k}{Q_I} = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\log(|W_{y(i)}|} - \frac{1}{2}\der{W_k}{ [W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}] }\right)g(i)_{y(i)} \\ \\
+&\text{using the chain rule given in equation \ref{eq:chain_rule},}  \\
+& \der{W_k}{Q_I} = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\log(|W_{y(i)}|} - \frac{1}{2} \der{W_k}{W_{y(i)}\zbar{i}} \times \der{W_{y(i)}\zbar{i}}{ [W_{y(i)}\zbar{i}]^T [W_{y(i)}\zbar{i}] }\right)g(i)_{y(i)} \\ \\
+& \der{W_k}{Q_I} = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\log(|W_{y(i)}|} - \left( \der{W_k}{W_{y(i)}} \times \der{W_{y(i)}}{W_{y(i)}\zbar{i}} + \der{W_k}{\zbar{i}}W_{y(i)}^T\right) \times W_{y(i)}\zbar{i}  \right)g(i)_{y(i)} \\ \\
+& \der{W_k}{Q_I} = \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\log|W_{y(i)}|} -  \der{W_k}{W_{y(i)}} \times \der{W_{y(i)}}{W_{y(i)}\zbar{i}}\times W_{y(i)}\zbar{i}  \right)g(i)_{y(i)}  \\ 
+& \qquad \qquad \qquad - \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\zbar{i}}W_{y(i)}^T  W_{y(i)}\zbar{i} \right) g(i)_{y(i)} \\ \\
+\end{align*}
+
+\begin{align*}
+&\text{using the fact that } \der{W_k}{W_{y(i)}} \text{ is zero everywhere, expect when } y(i)=k, \nonumber \\ \\
+& \der{W_k}{Q_I} = \sum\limits_{i=1}^n \left( \der{W_k}{\log|W_k|} -  \der{W_k}{W_k} \times \der{W_k}{W_k\zbar{i}}\times W_k\zbar{i}  \right)g(i)_k  \\ 
+& \qquad \qquad \qquad - \sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\zbar{i}}W_{y(i)}^T  W_{y(i)}\zbar{i} \right) g(i)_{y(i)} \\ \\
+& \text{using the identities \ref{id:log|A|_A} and \ref{id:Ax_A},} \\
+& \der{W_k}{Q_I} = vec(W_k^{-T})\sum\limits_{i=1}^n g(i)_k -
+\sum\limits_{i=1}^n [(\zbar{i}\otimes I_d) \times W_k\zbar{i}]g(i)_k  \\
+& \qquad \qquad \qquad -\sum\limits_{i=1}^n \sum\limits_{y(i)=1}^m \left( \der{W_k}{\zbar{i}}W_{y(i)}^T  W_{y(i)}\zbar{i} \right) g(i)_{y(i)} \\ \\
+& \text{using the fact that } (x \otimes I)(Ax) = (x \otimes Ax), \text{ we have, } \nonumber \\
+& \der{W_k}{Q_I} = \textmd{vec}(W_k^{-T})\sum\limits_{i=1}^n g(i)_k - \sum\limits_{i=1}^N  [\zbar{i} \otimes W_k\zbar{i}] \times g(i)_k   \\ 
+& \qquad \qquad \qquad - \sum\limits_{i=1}^n \der{W_k}{\textbf{z}(i)} \left( \sum\limits_{y(i)=1}^m W_{y(i)}^T  W_{y(i)} \zbar{i}g(i)_{y(i)} \right)
+\end{align*}
+\\ \\
+\subsection{Gradient of $Q_{II}$}
+
+$Q_{II} = \sum\limits_{i=1}^n \sum\limits_{r=1}^{d} \log\left(\sum\limits_{l=1}^{m}\phi_{r,l}(i)\right)$, where $\phi_{r,l}(i)= \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right)$. Also, $ \phi_r(i) \leftarrow \sum\limits_{l=1}^{m}\phi_{r,l}(i)$.
+
+\subsubsection*{Partial derivative of $Q_{II}$ w.r.t to $\alpha_k$ }
+
+\begin{align*}
+& \der{\alpha_k}{Q_{II}}= \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m}  \frac{\der{\alpha_k}{\alpha_l}}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \\  
+& \qquad - \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m}\left(\frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}}\times \der{\alpha_k}{\bar{z}_{r,l}(i)} \right) \\ \\
+& \text{using the fact that } \der{\alpha_k}{\bar{z}_{r,l}(i)} = \der{\alpha_k}{z_r(i)-\mu_{r,l}} = \der{\alpha_k}{z_r(i)}, \\
+& \der{\alpha_k}{Q_{II}}= \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left(\frac{1}{\sqrt{2\pi\Sigma_{r,k}}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right)\right)  \\ 
+& \qquad \qquad - \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \left( \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}}\times \der{\alpha_k}{z_{r}(i)}\right) \\ \\
+& \text{moving } \der{\alpha_k}{z_r(i)} \text{ outside the summation, being independent of } l,\\
+& \der{\alpha_k}{Q_{II}}= \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left(\frac{1}{\sqrt{2\pi\Sigma_{r,k}}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right)\right) \nonumber \\ 
+& \qquad \qquad - \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \der{\alpha_k}{z_r(i)} \sum\limits_{l=1}^{m} \left( \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}} \right) \\ \\
+&\text{writing the expression in a condensed form in terms of } \phi_{r,l}(i) \text{ and } \phi_{r,k}(i), \\
+& \der{\alpha_k}{Q_{II}} = \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \times \frac{\phi_{r,k}(i)}{\alpha_k} - \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \der{\alpha_k}{z_r(i)} \sum\limits_{l=1}^{m} \left( \phi_{r,l}(i) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}} \right) 
+\end{align*}
+
+\subsubsection*{Partial derivative of $Q_{II}$ w.r.t to $\mu_k$ }
+\begin{align*}
+& \der{\mu_k}{Q_{II}}=-\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \left( \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}}\times \der{\mu_k}{\bar{z}_{r,l}(i)}\right) \\ \\
+&\text{writing } \der{\mu_k}{\bar{z}_{r,l}(i)} \text{ as } \der{\mu_k}{z_r(i) -\mu_{r,l}} \text{ and expanding, } \\
+& \der{\mu_k}{Q_{II}}=-\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \der{\mu_k}{z_r(i)}\sum\limits_{l=1}^{m} \left( \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}} \right)  \\ 
+& \qquad \qquad + \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)}  \left( \frac{\alpha_k}{\sqrt{2\pi\Sigma_{r,k}}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right) \times \frac{\bar{z}_{r,k}(i)}{\Sigma_{r,k}} \right) \textbf{e}_r \\
+\nonumber \\ 
+& \text{ where, } \textbf{e}_r \text{ is a } d- \text{dimensional standard basis vector along the } r^{th} \text{ dimension. Further,} \\
+&\text{ writing the expression in a condensed form in terms of } \phi_{r,l}(i) \text{ and } \phi_{r,k}(i), \\
+& \der{\mu_k}{Q_{II}}=-\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \der{\mu_k}{z_r(i)}\sum\limits_{l=1}^{m} \left( \phi_{r,l}(i) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}} \right) + \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)}  \left( \phi_{r,k}(i) \times \frac{\bar{z}_{r,k}(i)} {\Sigma_{r,k}} \right) \textbf{e}_r
+\end{align*}
+\\
+\subsubsection*{Partial derivative of $Q_{II}$w.r.t to $W_k$}
+\begin{align*}
+&\der{W_k}{Q_{II}}=-\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \frac{\alpha_l \Sigma^{-\frac{3}{2}}_{r,l}}{2\sqrt{2\pi}} \der{W_k}{\Sigma_{r,l}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2} {2\Sigma_{r,l}}\right)  \\
+&\qquad \qquad \qquad +\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \frac{d}{dW_k}\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \\ \\
+& \text{using the product rule on } \frac{d}{dW_k}\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right), \\ \\
+&\der{W_k}{Q_{II}}=-\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \frac{\alpha_l \Sigma^{-\frac{3}{2}}_{r,l}}{2\sqrt{2\pi}} \der{W_k}{\Sigma_{r,l}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2} {2\Sigma_{r,l}}\right)  \\
+& +\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \left( \frac{-\bar{z}_{r,l}(i)}{\Sigma_{r,l}}\der{W_k}{\bar{z}_r(i)} + \frac{\bar{z}_{r,l}(i)^2} {2\Sigma_{r,l}^2}\der{W_k}{\Sigma_{r,l}} \right)
+\end{align*}
+
+\begin{align*}
+& \text{expanding the summation,}  \\
+& \der{W_k}{Q_{II}} = -\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left( \frac{\alpha_k}{\sqrt{8\pi\Sigma_{r,k}^3}} \der{W_k}{\Sigma_{r,k}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right) \right) \nonumber \\ 
+& \qquad \qquad \qquad + \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left( \frac{\alpha_k \bar{z}_{r,k}(i)^2}{\sqrt{8\pi\Sigma_{r,k}^5}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right) \der{W_k}{\Sigma_{r,k}} \right)  \\ 
+& \qquad \qquad \qquad - \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \sum\limits_{l=1}^{m} \frac{\alpha_l\bar{z}_{r,l}(i)}{\sqrt{2\pi\Sigma_{r,l}^3}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right)\der{W_k}{\bar{z}_r(i)} \\ \\
+& \text{using the fact that } \der{W_k}{\bar{z}_r(i)} = \der{W_k}{z_r(i)-\mu_{r,l}} = \der{W_k}{z_r(i)},   \\
+& \der{W_k}{Q_{II}} = -\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left( \frac{\alpha_k}{\sqrt{8\pi\Sigma_{r,k}^3}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right) \der{W_k}{\Sigma_{r,k}} \right)  \\ 
+& \qquad \qquad + \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left( \frac{\alpha_k \bar{z}_{r,k}(i)^2}{\sqrt{8\pi\Sigma_{r,k}^5}} \exp\left( \frac{-\bar{z}_{r,k}(i)^2}{2\Sigma_{r,k}}\right) \der{W_k}{\Sigma_{r,k}} \right)  \\ 
+& \qquad \qquad -\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)}\der{W_k}{z_r(i)} \sum\limits_{l=1}^{m} \left( \frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}} \exp\left( \frac{-\bar{z}_{r,l}(i)^2}{2\Sigma_{r,l}}\right) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}} \right) \\
+ \\ \\ 
+& \text{condensing the expression in terms of } \phi_{r,l}(i) \text{ and } \phi_{r,k}(i) \\
+& \der{W_k}{Q_{II}} = -\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left( \frac{\phi_{r,k}(i)}{2\Sigma_{r,k}} \times \der{W_k}{\Sigma_{r,k}} \right) + \sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)} \left( \bar{z}_{r,k}(i)^2 \frac{\phi_{r,k}(i)}{2\Sigma^2_{r,k}} \times \der{W_k}{\Sigma_{r,k}} \right)  \\ 
+& \qquad \qquad -\sum\limits_{i=1}^n \sum\limits_{r=1}^{d}\frac{1}{\phi_r(i)}\der{W_k}{z_r(i)} \sum\limits_{l=1}^{m} \left( \phi_{r,l}(i) \times \frac{\bar{z}_{r,l}(i)}{\Sigma_{r,l}} \right)
+\end{align*}
+\\ \\
+\subsection{Gradient of $\textbf{z}(i) $}
+Recall that $z_r(i)=\Psi_r^{-1}(u(i))$. Since $\Psi^{-1}(\cdot)$ does not have a close form expression, to obtain the partial derivatives of $z_r(i)$, we rely on the forward function $\Psi(\cdot)$ and its partial derivatives. Using the triple product rule given in equation \ref{triple_prod_rule} followed by a slight rearrangement.
+
+\begin{equation}\label{eq:TripleProduct}
+\frac{dz_r(i)}{d\theta}=- \frac{\left(\frac{d\Psi_r(z_r(i))}{d\theta}\right)_z}{\left(\frac{d\Psi_r(z_r(i))}{dz_r(i)}\right)_\theta}
+\end{equation}
+Writing the expression for the forward function $\Psi_r(z_r(i))$,
+\begin{equation}
+\Psi_r(z_r(i))=\sum\limits_{l=1}^{M}\frac{\alpha_l}{2}\left[1+ \erf \left( \frac{z_r(i)-\mu_{r,l}}{\sqrt{2\Sigma_{r,l}}}\right) \right]
+\end{equation}
+The expression in the denominator of equation \ref{eq:TripleProduct} is identical for all the partial derivatives of $\textbf{z}(i)$ and is given in equation \ref{eq:Gamma_dz}. In the following sections, we derive the expression only for the numerator.
+\begin{equation}\label{eq:Gamma_dz}
+\der{z_r(i)}{\Psi_r(z_r(i))}=\sum\limits_{l=1}^{M}\frac{\alpha_l}{\sqrt{2\pi\Sigma_{r,l}}}\exp\left( - \frac{(z_r(i)-\mu_{r,l})^2}{2\Sigma_{r,l}}	 \right)
+\end{equation}
+\\
+\subsubsection*{Derivative of $z_r(i)$ w.r.t to $\alpha_k$}
+\begin{equation}
+\der{\alpha_k}{\Psi_r(z_r(i))}=\frac{1}{2}\left[1+ \erf \left( \frac{z_r(i)-\mu_{k,r}}{\sqrt{2\Sigma_{r,k}}}\right) \right]
+\end{equation}
+\\
+\subsubsection*{Derivative of $z_r(i)$ w.r.t to $\mu_k$}
+\begin{equation}
+\der{\mu_k}{\Psi_r(z_r(i))}= -\frac{\alpha_k}{\sqrt{2\pi\Sigma_{r,k}}}\exp\left( - \frac{(z_r(i)-\mu_{k,r})^2}{2\Sigma_{r,k}}	 \right)
+\end{equation}
+\\
+\subsubsection*{Derivative of $z_r(i)$ w.r.t to $W_k$}
+\begin{equation}
+\der{W_k}{\Psi_r(z_r(i))}= \sum\limits_{l=1}^{m}\frac{\alpha_l}{\sqrt{\pi}}\exp\left( - \frac{(z_r(i)-\mu_{r,l})^2}{2\Sigma_{r,l}}	 \right) \times \frac{(z_r(i)-\mu_{r,l})}{\sqrt{2}} \times \frac{-1}{2\Sigma_{r,l}^{3/2}} \times \der{W_k}{\Sigma_{r,l}}
+\end{equation}
+
+\begin{equation}
+\der{W_k}{\Psi_r(z_r(i))}= -\frac{\alpha_k}{\sqrt{8\pi\Sigma^3_{r,k}}}\exp\left( - \frac{(z_r(i)-\mu_{r,k})^2}{2\Sigma_{r,k}}	 \right) \times (z_r(i)-\mu_{r,k})\times \der{W_k}{\Sigma_{r,k}}
+\end{equation}
+
+$\der{W_k}{\Sigma_{r,k}}$ can be obtained by selecting the appropriate column from the matrix resulting from the following operation.
+
+\begin{equation}
+-(I_{d^2} \otimes T_{d,d})\times(\Sigma_k \otimes \Sigma_k^T)
+\end{equation}
+
+\section{Derivation of E-step}\label{sec:Estep_derivation}
+\begin{equation} \label{eq:ll_comp_expectation}
+Q(\Theta,\hat{\Theta})=\sum\limits_{y(1)=1}^m \sum\limits_{y(2)=1}^m \ldots \sum\limits_{y(n)=1}^m \left[ \left( \sum\limits_{i=1}^{n}h(i)_{y(i)}  \right) \prod\limits_{j=1}^{n}g(j)_{y(j)} \right]
+\end{equation}
+where, 
+\begin{align*}
+h(i)_{y(i)} &= \log \left(\frac{\alpha_{y(i)}\phi(\invCDF{i}; \Theta_{y(i)})}{\llDenom{i}} \right) \\
+g(j)_{y(j)} &= P\left(y(j)|\textbf{u}(j),\hat{\Theta}\right)
+\end{align*} 
+The expression in \ref{eq:ll_comp_expectation} can be expanded to obtain,
+\begin{align}
+Q(\Theta,\hat{\Theta}) &= \sum\limits_{y(1)=1}^m h(1)_{y(1)}g(1)_{y(1)} \prod\limits_{j=1,j\neq 1}^n \sum\limits_{y(j)=1}^m g(j)_{y(j)} \nonumber \\
+& + \sum\limits_{y(2)=1}^m h(2)_{y(2)}g(2)_{y(2)}\prod\limits_{j=1,j\neq 2}^n \sum\limits_{y(j)=1}^m g(j)_{y(j)} + \ldots  \nonumber \\ 
+& \ldots + \sum\limits_{y(n)=1}^m h(n)_{y(n)}g(n)_{y(n)}\prod\limits_{j=1,j\neq n}^n \sum\limits_{y(j)=1}^n g(j)_{y(j)}
+\end{align}
+Given that $\sum\limits_{y(j)=1}^m g(j)_{y(j)} = 1, \text{ for all }  j \in \{1,\ldots, n\} $, the above equation simplifies as:
+\begin{equation}
+Q(\Theta,\hat{\Theta}) = \sum\limits_{i=1}^{n}\sum\limits_{y(i)=1}^m h(i)_{y(i)}g(i)_{y(i)}
+\end{equation}
+
+
+\end{document}
