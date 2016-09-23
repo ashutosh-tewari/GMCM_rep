@@ -33,7 +33,7 @@ end
 
 for j = 1:d
     u(:,j) = cdf(marg_dist1{j},data(:,j));
-    data_out(:,j) = computeInverseVals_vectorized_1(marg_dist2{j},u(:,j));
+    data_out(:,j) = computeInverseValsUnivGMM(marg_dist2{j},u(:,j));
 end
 
 if plo

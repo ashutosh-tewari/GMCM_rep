@@ -54,12 +54,17 @@ offSet2 = offSet1 + M*num_W_params;
 % Getting the Mixing weights.
 %PComponents = x_in(offSet2+1:end);
 PComponents = [x_in(offSet2+1:end) 1-sum(x_in(offSet2+1:end))];
-
+PComponents = PComponents./sum(PComponents);
+try
+gmmObj = gmdistribution(mu,Sigma,PComponents);
+catch
+    1
+end
 % Obtaining the inverseValues
 if isempty(sorting_order)
-    z = computeInverseVals_vectorized(mu,Sigma,PComponents,u,d,M,N,0,g);
+    z = computeInverseVals_vectorized(gmmObj,u,0,g);
 else
-    z = computeInverseVals_vectorized(mu,Sigma,PComponents,u,d,M,N,1,g);
+    z = computeInverseVals_vectorized(gmmObj,u,1,g);
     for i = 1:d
        z(sorting_order(:,i),i) = z(:,i);
     end
