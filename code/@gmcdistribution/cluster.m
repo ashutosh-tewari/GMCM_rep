@@ -11,7 +11,7 @@
             % Obtaining the inverse values with respect to the GMM marginal
             % distributions
             %inverseVals = computeInverseVals_vectorized(obj.mu,obj.Sigma,obj.PComponents,u,d,K,N,0);
-            inverseVals = obj.computeInverseVals_vectorized(u,0);
+            inverseVals = computeInverseVals_vectorized(obj,u,0);
             
             % Defining  the gmm object from which the gmc distribution is
             % derived

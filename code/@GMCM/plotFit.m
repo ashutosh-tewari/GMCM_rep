@@ -11,6 +11,13 @@ function [xgrid,ygrid,Z] = plotFit(obj,data,varargin) %logLikelihoodVal,numMeshP
     p = inputParser;
     p.addParamValue('plot_type','contour_plot');
     p.parse(varargin{:});
+    
+    for i = 1:length(obj.marginals)
+        lower_limits(i) = obj.marginals{i}.icdf(0.00001);
+        upper_limits(i) = obj.marginals{i}.icdf(0.99999);
+    end
+        
+       
 
 
     figure;
@@ -21,31 +28,45 @@ function [xgrid,ygrid,Z] = plotFit(obj,data,varargin) %logLikelihoodVal,numMeshP
     for i = 1:d
         for j = 1:d
             subplot_idx = sub2ind([d,d],i,j);
-            subplot1(subplot_idx);   hold on; 
+            subplot1(subplot_idx);   hold on;
+            x_limit = [lower_limits(i) upper_limits(i)];
+            y_limit = [lower_limits(j) upper_limits(j)];
+            if i == j                
+                marginalPlots(data(:,i),obj.marginals{i});
+                xlim(x_limit);
+                continue;
+            end
             bivar_data = data(:,[i j]);
             marginals = obj.marginals([i j]);
             marg_gmc = obj.gmc.obtainMarginal([i j]);
-            bivariatePlots(bivar_data,marginals,marg_gmc,p.Results.plot_type,256);        
+            bivariatePlots(bivar_data,marginals,marg_gmc,p.Results.plot_type,256);
+            xlim(x_limit);
+            ylim(y_limit);
         end
     end
 
 end
 
+%%
+function marginalPlots(data,marginal_density)
+
+    x = [marginal_density.icdf(0.001): marginal_density.BandWidth: marginal_density.icdf(0.999)];
+    y = marginal_density.pdf(x);
+    y = y/sum(y);
+    counts = histc(data,x);
+    counts = counts/sum(counts);
+    bar(x,counts,'c','EdgeColor','b','linewidth',0.25);
+    plot(x,y,'k','linewidth',2);
+
+end
 
 
-%%%%
+%%
 function bivariatePlots(data,marg_densities,marg_gmc,plot_type,bin_num)
 
-    if nargin < 5
+    if nargin <5
         bin_num = 512;
     end
-
-    % plotting the marginal densities
-    if isequal(data(:,1),data(:,2))
-        hist(data(:,1),10);
-        return;
-    end
-
    
     for j = 1:2    
         l_limit(j) = marg_densities{j}.icdf(0.001);
